@@ -53,11 +53,19 @@ class BigQueryLogger:
         self.table_id = table_id or os.getenv(
             'BQ_EVENTS_TABLE', 'incidents'
         )
+        # credentials_path = credentials_path or os.getenv(
+        #     'GOOGLE_APPLICATION_CREDENTIALS', './secrets/gcp-key.json'
+        # )
+
+        # if credentials_path and os.path.exists(credentials_path):
+        #     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
         credentials_path = credentials_path or os.getenv(
-            'GOOGLE_APPLICATION_CREDENTIALS', './secrets/gcp-key.json'
+             'GOOGLE_APPLICATION_CREDENTIALS', ''
         )
 
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        if credentials_path and os.path.exists(credentials_path):
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        # else: use Application Default Credentials (Cloud Run uses these automatically)
 
         from google.cloud import bigquery
         self.client = bigquery.Client(project=self.project_id)

@@ -27,10 +27,11 @@ class ModelUploader:
             'GCS_MODELS_BUCKET', 'highway-safety-models-jude'
         )
         credentials_path = credentials_path or os.getenv(
-            'GOOGLE_APPLICATION_CREDENTIALS', './secrets/gcp-key.json'
+            'GOOGLE_APPLICATION_CREDENTIALS', ''
         )
 
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        if credentials_path and os.path.exists(credentials_path):
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
 
         from google.cloud import storage
         self.client = storage.Client(project=self.project_id)

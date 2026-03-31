@@ -31,10 +31,11 @@ class IncidentPublisher:
             'PUBSUB_TOPIC', 'highway-safety-events'
         )
         credentials_path = credentials_path or os.getenv(
-            'GOOGLE_APPLICATION_CREDENTIALS', './secrets/gcp-key.json'
+            'GOOGLE_APPLICATION_CREDENTIALS', ''
         )
 
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        if credentials_path and os.path.exists(credentials_path):
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
 
         from google.cloud import pubsub_v1
         self.publisher = pubsub_v1.PublisherClient()
