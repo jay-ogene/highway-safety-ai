@@ -49,6 +49,30 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+import json
+import tempfile
+
+def setup_gcp_credentials():
+    """Use Streamlit secrets in cloud, local key file when running locally."""
+    try:
+        # Running on Streamlit Cloud — use secrets
+        if hasattr(st, 'secrets') and 'gcp_service_account' in st.secrets:
+            key_dict = dict(st.secrets['gcp_service_account'])
+            key_dict['private_key'] = key_dict['private_key'].replace('\\n', '\n')
+            tmp = tempfile.NamedTemporaryFile(
+                mode='w', suffix='.json', delete=False
+            )
+            json.dump(key_dict, tmp)
+            tmp.flush()
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = tmp.name
+            os.environ['GCP_PROJECT_ID'] = st.secrets.get(
+                'GCP_PROJECT_ID', 'highway-safety-ai-jude'
+            )
+    except Exception:
+        pass  # Running locally — use local key file
+
+setup_gcp_credentials()
+
 
 # ── Data Loading ──────────────────────────────────────────────────
 @st.cache_resource
