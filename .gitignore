@@ -33,3 +33,4 @@ data/processed/
 # Wandb
 wandb/
 .streamlit/secrets.toml
+nano.env
