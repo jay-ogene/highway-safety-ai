@@ -34,3 +34,17 @@ data/processed/
 wandb/
 .streamlit/secrets.toml
 nano.env
+
+# Output videos and frames
+output/pipeline/
+output/*.mp4
+output/*.jpg
+
+# Node modules (if any JS tools used)
+node_modules/
+
+# VS Code
+.vscode/
+
+# Streamlit cache
+.streamlit/cache/
