@@ -52,38 +52,62 @@ st.markdown("""
 import json
 import tempfile
 
-def setup_gcp_credentials():
-    """Use Streamlit secrets in cloud, local key file when running locally."""
+import sys, os, json, tempfile
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+
+# ── GCP Credentials — MUST run before any BigQuery call ──────────
+def _setup_credentials():
+    """Write Streamlit secrets to a temp key file."""
     try:
-        # Running on Streamlit Cloud — use secrets
-        if hasattr(st, 'secrets') and 'gcp_service_account' in st.secrets:
-            key_dict = dict(st.secrets['gcp_service_account'])
-            key_dict['private_key'] = key_dict['private_key'].replace('\\n', '\n')
+        if "gcp_service_account" in st.secrets:
+            key = dict(st.secrets["gcp_service_account"])
+            if "private_key" in key:
+                key["private_key"] = key["private_key"].replace("\\n", "\n")
             tmp = tempfile.NamedTemporaryFile(
-                mode='w', suffix='.json', delete=False
+                mode="w", suffix=".json", delete=False
             )
-            json.dump(key_dict, tmp)
+            json.dump(key, tmp)
             tmp.flush()
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = tmp.name
-            os.environ['GCP_PROJECT_ID'] = st.secrets.get(
-                'GCP_PROJECT_ID', 'highway-safety-ai-jude'
-            )
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
+            return True
     except Exception:
-        pass  # Running locally — use local key file
+        pass
 
-setup_gcp_credentials()
+    # Fall back to local key file
+    local_key = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "secrets", "gcp-key.json"
+    )
+    if os.path.exists(local_key):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = local_key
+        return True
 
+    return False
 
-# ── Data Loading ──────────────────────────────────────────────────
+_creds_ok = _setup_credentials()
+
+# ── BigQuery client ───────────────────────────────────────────────
 @st.cache_resource
 def get_bq_client():
-    from storage.bigquery_logger import BigQueryLogger
-    return BigQueryLogger()
+    if not _creds_ok:
+        return None
+    try:
+        from storage.bigquery_logger import BigQueryLogger
+        return BigQueryLogger()
+    except Exception as e:
+        st.sidebar.error(f"BigQuery: {str(e)[:80]}")
+        return None
 
 
 @st.cache_data(ttl=30)
 def load_summary(sequence_filter: str = "") -> dict:
     bq = get_bq_client()
+    if bq is None:
+        return {}
     seq = f"WHERE sequence_id = '{sequence_filter}'" \
         if sequence_filter else ""
     sql = f"""
@@ -115,6 +139,8 @@ def load_incidents(
     sequence_filter: str = ""
 ) -> pd.DataFrame:
     bq = get_bq_client()
+    if bq is None:
+        return pd.DataFrame()
     seq = f"AND sequence_id = '{sequence_filter}'" \
         if sequence_filter else ""
     sql = f"""
