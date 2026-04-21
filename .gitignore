@@ -48,3 +48,6 @@ node_modules/
 
 # Streamlit cache
 .streamlit/cache/
+notebooks/*.csv
+notebooks/Untitled.ipynb
+dashboard/demo.py
