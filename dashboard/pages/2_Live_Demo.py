@@ -1,19 +1,30 @@
 import streamlit as st
-import tempfile
 import os
 import sys
 import time
-import cv2
-import numpy as np
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+try:
+    import cv2
+    import numpy as np
+    from pathlib import Path
+    _has_cv2 = True
+except ImportError:
+    _has_cv2 = False
 
-st.set_page_config(
-    page_title="Highway Safety AI — Live Demo",
-    page_icon="🛣️",
-    layout="wide"
-)
+if not _has_cv2:
+    st.title("🛣️ Highway Safety AI — Live Demo")
+    st.warning(
+        "**Live Demo requires OpenCV — available locally only.**\n\n"
+        "Run locally:\n"
+        "```\ngit clone https://github.com/jay-ogene/highway-safety-ai\n"
+        "conda activate highway-safety\n"
+        "streamlit run dashboard/app.py\n```\n\n"
+        "**Or use the live API:**\n"
+        "https://highway-safety-api-720304622514.us-central1.run.app/docs"
+    )
+    st.stop()
+
+# rest of file continues...
 
 st.title("🛣️ Highway Safety AI — Live Demo")
 st.caption("Upload any highway footage and get a real-time incident analysis report")
